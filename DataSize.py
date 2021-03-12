@@ -1,0 +1,5 @@
+BIT = 0
+BYTE = 1
+WORD = 2
+DWORD = 3
+LWORD = 4

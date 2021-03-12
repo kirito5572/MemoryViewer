@@ -1,0 +1,7 @@
+BINARY = 0
+BCD = 1
+INT = 2
+UINT = 3
+HEX = 4
+FLOAT = 5
+STRING = 6
