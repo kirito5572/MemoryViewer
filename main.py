@@ -1,14 +1,24 @@
 import sys
 import DataType
 import DataSize
+import PLC_Data
 import serial
+import serial.serialutil as serialutil
 import socket
-import math
 import serial.tools.list_ports as serialports
 from PyQt5.QtWidgets import *
 from PyQt5 import uic
+from multiprocessing import Process, Queue
 
 form_class = uic.loadUiType("main.ui")[0]
+
+
+def serial_data_read(start, end, memory):
+    for a in range(0, ((end // 1000) + 1) - (start // 1000)):
+        """return_data, bytearray[1000] data"""
+        return_data = mainWindow.get_data(memory, a * 1000)
+        for b in range(0, 1000):
+            mainWindow.main_data[((start // 1000) * 1000) + (b // 10) % 100][b % 10] = return_data[b]
 
 
 class WindowClass(QMainWindow, form_class):
@@ -31,9 +41,9 @@ class WindowClass(QMainWindow, form_class):
     LSPLC_XGI = ["XGI-CPUUN", "XGI-CPUU", "XGI-CPUH", "XGI-CPUS", "XGI-CPUE"]
     LSPLC_XGK = ["XGK-CPUUN", "XGK-CPUHN", "XGK-CPUSN", "XGK-CPUU", "XGK-CPUH", "XGK-CPUA", "XGK-CPUS", "XGK-CPUE"]
     LSPLC_XGR = ["XGR-CPUH/T", "XGR-CPUH/F", "XGR-CPUH/S"]
-    LSPLC_XBC = ["XBC U TYPE", "XBC H TYPE", "XBC SU TYPE", "XBC E TYPE", "XBM TYPE", "XBM Slim"]
-    LSPLC_XEC = ["XEC U TYPE", "XEC H TYPE", "XEC SU TYPE", "XEC E TYPE", "XEM TYPE"]
-    LSPLC_MASTERK = ["K120S", " K200S", "K300S", "K10S1", "K80S", "K1000S", "K10S", "K30S", "K60S"]
+    LSPLC_XBC = ["XBC U TYPE", "XBC H TYPE", "XBC SU TYPE", "XBC E TYPE", "XBM Slim"]
+    LSPLC_XEC = ["XEC U TYPE", "XEC H TYPE", "XEC SU TYPE", "XEC E TYPE"]
+    LSPLC_MASTERK = ["K120S", "K200S", "K300S", "K10S1", "K80S", "K1000S", "K10S", "K30S", "K60S"]
     LSPLC_GLOFA = ["GM1", "GM2", "GM3", "GM4-CPUA", "GM4-CPUB", "GM4-CPUC", "GM6", "GM7U", "GMR"]
     serial = serial.Serial
     socket = socket.socket
@@ -187,11 +197,16 @@ class WindowClass(QMainWindow, form_class):
                                                     self.IP_2.text() + "." +
                                                     self.IP_3.text() + "." +
                                                     self.IP_4.text() + ":2004")
-                mainWindow.statusBar().showMessage("온라인, 접속 완료")
+                mainWindow.statusBar.showMessage("온라인, 접속 완료")
+                self.search_start_memory.setText("%MB0")
+                self.search_start_memory.setText("%MB1000")
                 self.serial.close()
             except ValueError:
                 """경고창 띄우기"""
-                mainWindow.statusBar().showMessage("오프라인, 접속 대기중")
+                mainWindow.statusBar.showMessage("오프라인, 접속 대기중")
+            except serialutil.SerialException:
+                """접속 실패"""
+                mainWindow.statusBar.showMessage("오프라인, 접속 대기중")
 
     def get_data(self, memory, address):
         send_packet = self.ethernet_packet_maker(memory, address)
@@ -220,10 +235,44 @@ class WindowClass(QMainWindow, form_class):
     def xec_search(self, data1, data2):
         start_memory = bytearray(data1)
         end_memory = bytearray(data2)
-        if not(start_memory[0] == '%'):
+        if start_memory[0] != '%':
             return
-
-
+        if not(self.memory_checker(start_memory[1])):
+            return
+        if start_memory[2] == "X":
+            data = start_memory[3:]
+            self.main_data_load_start = data // 8
+        elif start_memory[2] == "B":
+            self.main_data_load_start = start_memory[3:]
+        elif start_memory[2] == "W":
+            data = start_memory[3:]
+            self.main_data_load_start = data * 2
+        elif start_memory[2] == "D":
+            data = start_memory[3:]
+            self.main_data_load_start = data * 4
+        elif start_memory[2] == "L":
+            data = start_memory[3:]
+            self.main_data_load_start = data * 8
+        if end_memory[0] != '%':
+            return
+        if start_memory[1] != end_memory[1]:
+            return
+        if end_memory[2] == "X":
+            data = end_memory[3:]
+            self.main_data_load_end = data // 8
+        elif end_memory[2] == "B":
+            self.main_data_load_end = end_memory[3:]
+        elif end_memory[2] == "W":
+            data = end_memory[3:]
+            self.main_data_load_end = data * 2
+        elif end_memory[2] == "D":
+            data = end_memory[3:]
+            self.main_data_load_end = data * 4
+        elif end_memory[2] == "L":
+            data = end_memory[3:]
+            self.main_data_load_end = data * 8
+        if self.main_data_load_start > self.main_data_load_end:
+            self.main_data_load_end = self.main_data_load_start + 1000
 
     def button_menu_refresh_function(self):
         self.BitSel_Bit.setChecked(False)
@@ -276,14 +325,19 @@ class WindowClass(QMainWindow, form_class):
                 ports.append(i.device)
             self.CommSel_Comport.addItems(ports)
 
-    def ethernet_packet_maker(self, memory, address):
+    @staticmethod
+    def ethernet_packet_maker(memory, address):
         application_header = bytearray("LSIS-XGT", encoding='ASCII')
-        application_header.append(0x00);application_header.append(0x00)
-        application_header.append(0x00);application_header.append(0x00)
+        application_header.append(0x00)
+        application_header.append(0x00)
+        application_header.append(0x00)
+        application_header.append(0x00)
         application_header.append(0xA0)
         application_header.append(0x33)
-        application_header.append(0x01);application_header.append(0x00)
-        application_header.append(15 + len(str(address)));application_header.append(0x00)
+        application_header.append(0x01)
+        application_header.append(0x00)
+        application_header.append(15 + len(str(address)))
+        application_header.append(0x00)
         application_header.append(0x01)
         application_header.append(0x00)
         application_instruction = bytearray()
@@ -306,6 +360,65 @@ class WindowClass(QMainWindow, form_class):
         send_data_packet = application_header + application_instruction
         return send_data_packet
 
+    def memory_checker(self, memory):
+        if self.Comm_Product_C.currentIndex() == 0:
+            for a in PLC_Data.XGI:
+                if a == memory:
+                    return True
+        elif self.Comm_Product_C.currentIndex() == 1:
+            for a in PLC_Data.XGI:
+                if a == memory:
+                    return True
+        elif self.Comm_Product_C.currentIndex() == 2:
+            for a in PLC_Data.XGK:
+                if a == memory:
+                    return True
+        elif self.Comm_Product_C.currentIndex() == 3:
+            if self.Comm_Product_S_Name.currentIndex() == 0:
+                for a in PLC_Data.XGK:
+                    if a == memory:
+                        return True
+            elif self.Comm_Product_S_Name.currentIndex() == 1:
+                for a in PLC_Data.XGK:
+                    if a == memory:
+                        return True
+            elif self.Comm_Product_S_Name.currentIndex() == 2:
+                for a in PLC_Data.XBC_SU:
+                    if a == memory:
+                        return True
+            elif self.Comm_Product_S_Name.currentIndex() == 3:
+                for a in PLC_Data.XBC_E:
+                    if a == memory:
+                        return True
+            elif self.Comm_Product_S_Name.currentIndex() == 4:
+                for a in PLC_Data.XBM_SILM:
+                    if a == memory:
+                        return True
+        elif self.Comm_Product_C.currentIndex() == 4:
+            if self.Comm_Product_S_Name.currentIndex() == 0:
+                for a in PLC_Data.XGI:
+                    if a == memory:
+                        return True
+            elif self.Comm_Product_S_Name.currentIndex() == 1:
+                for a in PLC_Data.XGI:
+                    if a == memory:
+                        return True
+            elif self.Comm_Product_S_Name.currentIndex() == 2:
+                for a in PLC_Data.XEC:
+                    if a == memory:
+                        return True
+            elif self.Comm_Product_S_Name.currentIndex() == 3:
+                for a in PLC_Data.XEC:
+                    if a == memory:
+                        return True
+        elif self.Comm_Product_C.currentIndex() == 5:
+            return
+        elif self.Comm_Product_C.currentIndex() == 6:
+            return
+        elif self.Comm_Product_C.currentIndex() == 7:
+            return
+        return False
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
@@ -316,6 +429,6 @@ if __name__ == "__main__":
     mainWindow.IP_2.setEnabled(False)
     mainWindow.IP_3.setEnabled(False)
     mainWindow.IP_4.setEnabled(False)
-    mainWindow.statusBar().showMessage("오프라인, 접속 대기중")
+    mainWindow.statusBar.showMessage("오프라인, 접속 대기중")
     mainWindow.setWindowTitle("메모리 뷰어")
     app.exec_()
