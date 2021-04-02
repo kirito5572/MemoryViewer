@@ -18,27 +18,29 @@ from bitarray import bitarray
 form_class = uic.loadUiType("main.ui")[0]
 
 
-def ethernet_data_read(start, end, memory):
-    for a in range(0, ((end // 1000) + 1) - (start // 1000)):
+def xgi_ethernet_data_read(start, end, memory):
+    range_data = ((end // 1000) + 1) - (start // 1000)
+    for a in range(range_data):
         """return_data, bytearray[1000] data"""
         mainWindow.main_data = mainWindow.main_data.astype('uint8')
-        return_data = mainWindow.get_data(memory, (a + (start // 1000)) * 1000)
+        return_data = mainWindow.xgi_get_ethernet_data(memory, (a + (start // 1000)) * 1000, a + 1)
         if return_data != 0:
-            for b in range(0, len(return_data)):
-                aa = (a * 100) + ((b // 10) % 100)
+            for b in range(len(return_data)):
+                aa = ((a + (start // 1000)) * 100) + ((b // 10) % 100)
                 ab = b % 10
+                print(str(aa) + ", " + str(ab) + ", " + str(return_data[b]))
                 mainWindow.main_data[aa][ab] = return_data[b]
         else:
-            for b in range(0, len(return_data)):
-                mainWindow.main_data[((start // 1000) * 1000) + ((b // 10) % 100)][b % 10] = "???"
+            for b in range(len(return_data)):
+                mainWindow.main_data[((start // 1000) * 1000) + ((b // 100) % 100)][b % 10] = "???"
 
 
-def serial_data_read(start, end, memory):
+def xgi_serial_data_read(start, end, memory):
     range_data = ((end // 100) + 1) - (start // 100)
     for a in range(range_data):
         """return_data, bytearray[100] data"""
         mainWindow.main_data = mainWindow.main_data.astype('uint8')
-        return_data = mainWindow.get_serial_data(memory, a * 100)
+        return_data = mainWindow.xgi_get_serial_data(memory, a * 100)
         if return_data != 0:
             for b in range(len(return_data)):
                 aa = (a * 10) + ((b // 10) % 10)
@@ -926,10 +928,20 @@ class WindowClass(QMainWindow, form_class):
                         a[i].setText(0, PLC_Data.XGK[i])
             elif self.Comm_Product_C.currentIndex() == 5:
                 """MASTERK"""
-                pass
+                self.memoryTree.clear()
+                top = QTreeWidgetItem(self.memoryTree)
+                top.setText(0, self.Comm_Product_S_Name.currentText())
+                a = [QTreeWidgetItem(top) for _ in range(len(PLC_Data.GLOFA))]
+                for i in range(len(PLC_Data.GLOFA)):
+                    a[i].setText(0, PLC_Data.GLOFA[i])
             elif self.Comm_Product_C.currentIndex() == 6:
                 """GLOFA"""
-                pass
+                self.memoryTree.clear()
+                top = QTreeWidgetItem(self.memoryTree)
+                top.setText(0, self.Comm_Product_S_Name.currentText())
+                a = [QTreeWidgetItem(top) for _ in range(len(PLC_Data.GLOFA))]
+                for i in range(len(PLC_Data.GLOFA)):
+                    a[i].setText(0, PLC_Data.GLOFA[i])
             elif self.Comm_Product_C.currentIndex() == 7:
                 """XGS"""
                 pass
@@ -965,27 +977,48 @@ class WindowClass(QMainWindow, form_class):
         else:
             mainWindow.statusBar.showMessage("오프라인, 접속 대기중")
 
-    def get_data(self, memory, address):
+    def xgi_get_ethernet_data(self, memory, address, block):
         b = self.comm_connect()
-        send_packet = self.ethernet_packet_maker(memory, address)
+        send_packet = self.xgi_ethernet_packet_maker(memory, address, block)
         receive_packet = bytearray()
-        if b == 0:
-            self.serial.write(send_packet)
-            for x in range(0, 1032):
+        self.serial.write(send_packet)
+        read_header = False
+        read_start = False
+        header = bytearray()
+        header_count = 0
+        count = 0
+        while True:
+            if read_start:
+                raw_data = self.serial.read()
+                if count > 11:
+                    receive_packet.append(int.from_bytes(raw_data, "big"))
+                count = count + 1
+                if count > 1011:
+                    break
+            else:
                 try:
-                    a = self.serial.read()
-                except serial.serialutil.SerialException:
+                    temp = self.serial.read()
+                    if read_header:
+                        header.append(int.from_bytes(temp, "big"))
+                        header_count = header_count + 1
+                        if header_count == 20:
+                            read_start = True
+                    if temp == bytes([76]):
+                        read_header = True
+                        header.append(int.from_bytes(temp, "big"))
+                        header_count = header_count + 1
+                except serial.serialutil.SerialException as e:
+                    print(e)
+                    self.serial.close()
                     return 1
-                if x > 31:
-                    receive_packet.append(int.from_bytes(a, "big"))
         self.serial.close()
         return receive_packet
 
-    def get_serial_data(self, memory, address):
+    def xgi_get_serial_data(self, memory, address):
         b = self.comm_connect()
         receive_packet = bytearray()
         if b == 0:
-            send_packet = self.serial_packet_maker(memory, address)
+            send_packet = self.xgi_serial_packet_maker(memory, address)
             self.serial.write(send_packet)
             read_header = False
             read_start = False
@@ -1029,20 +1062,22 @@ class WindowClass(QMainWindow, form_class):
         elif self.Comm_Product.currentIndex() == 1:
             if (self.Comm_Product_C.currentIndex() == 0) | \
                     (self.Comm_Product_C.currentIndex() == 1) | \
-                    (self.Comm_Product_C.currentIndex() == 4):
-                a = self.xec_search(start_memory, end_memory)
-                if a != 1:
+                    (self.Comm_Product_C.currentIndex() == 4) | \
+                    (self.Comm_Product_C.currentIndex() == 5) | \
+                    (self.Comm_Product_C.currentIndex() == 6):
+                c = self.xec_search(start_memory, end_memory)
+                if c != 1:
                     if self.ConnectionType == self.COM:
                         try:
-                            serial_data_read(self.main_data_load_start,
-                                             self.main_data_load_end,
-                                             self.main_data_load_memory)
+                            xgi_serial_data_read(self.main_data_load_start,
+                                                 self.main_data_load_end,
+                                                 self.main_data_load_memory)
                         except ValueError:
                             return 1
                     elif self.ConnectionType == self.ETHERNET:
-                        ethernet_data_read(self.main_data_load_start,
-                                           self.main_data_load_end,
-                                           self.main_data_load_memory)
+                        xgi_ethernet_data_read(self.main_data_load_start,
+                                               self.main_data_load_end,
+                                               self.main_data_load_memory)
                     self.memory_tree_viewer()
         self.comm_connect_memory_function()
 
@@ -1142,7 +1177,7 @@ class WindowClass(QMainWindow, form_class):
             self.CommSel_Comport.addItems(ports)
 
     @staticmethod
-    def ethernet_packet_maker(memory, address):
+    def xgi_ethernet_packet_maker(memory, address, block):
         application_header = bytearray("LSIS-XGT", encoding='latin-1')
         application_header.append(0x00)
         application_header.append(0x00)
@@ -1150,7 +1185,7 @@ class WindowClass(QMainWindow, form_class):
         application_header.append(0x00)
         application_header.append(0xA0)
         application_header.append(0x33)
-        application_header.append(0x01)
+        application_header.append(int(block))
         application_header.append(0x00)
         application_header.append(15 + len(str(address)))
         application_header.append(0x00)
@@ -1165,7 +1200,7 @@ class WindowClass(QMainWindow, form_class):
         application_instruction.append(0x00)
         application_instruction.append(0x01)
         application_instruction.append(0x00)
-        application_instruction.append(0x04)
+        application_instruction.append(3 + len(str(address)))
         application_instruction.append(0x00)
         application_instruction.append(0x25)
         application_instruction.append(bytearray(str(memory), encoding="latin-1")[0])
@@ -1177,7 +1212,7 @@ class WindowClass(QMainWindow, form_class):
         return send_data_packet
 
     @staticmethod
-    def serial_packet_maker(memory, address):
+    def xgi_serial_packet_maker(memory, address):
         packet = bytearray()
         packet.append(0x05)
         packet.append(0x30)
@@ -1255,7 +1290,9 @@ class WindowClass(QMainWindow, form_class):
         elif self.Comm_Product_C.currentIndex() == 5:
             return
         elif self.Comm_Product_C.currentIndex() == 6:
-            return
+            for a in PLC_Data.GLOFA:
+                if a == memory:
+                    return True
         elif self.Comm_Product_C.currentIndex() == 7:
             return
         return False
