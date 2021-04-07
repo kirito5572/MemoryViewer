@@ -18,6 +18,23 @@ from bitarray import bitarray
 form_class = uic.loadUiType("main.ui")[0]
 
 
+def glofa_ethernet_data_read(start, end, memory):
+    range_data = ((end // 1000) + 1) - (start // 1000)
+    for a in range(range_data):
+        """return_data, bytearray[1000] data"""
+        mainWindow.main_data = mainWindow.main_data.astype('uint8')
+        return_data = mainWindow.glofa_get_ethernet_data(memory, (a + (start // 1000)) * 1000, a + 1)
+        if return_data != 0:
+            for b in range(len(return_data)):
+                aa = ((a + (start // 1000)) * 100) + ((b // 10) % 100)
+                ab = b % 10
+                print(str(aa) + ", " + str(ab) + ", " + str(return_data[b]))
+                mainWindow.main_data[aa][ab] = return_data[b]
+        else:
+            for b in range(len(return_data)):
+                mainWindow.main_data[((start // 1000) * 1000) + ((b // 100) % 100)][b % 10] = "???"
+
+
 def xgi_ethernet_data_read(start, end, memory):
     range_data = ((end // 1000) + 1) - (start // 1000)
     for a in range(range_data):
@@ -977,6 +994,43 @@ class WindowClass(QMainWindow, form_class):
         else:
             mainWindow.statusBar.showMessage("오프라인, 접속 대기중")
 
+    def glofa_get_ethernet_data(self, memory, address, block):
+        b = self.comm_connect()
+        send_packet = self.glofa_ethernet_packet_maker(memory, address, block)
+        receive_packet = bytearray()
+        self.serial.write(send_packet)
+        read_header = False
+        read_start = False
+        header = bytearray()
+        header_count = 0
+        count = 0
+        while True:
+            if read_start:
+                raw_data = self.serial.read()
+                if count > 12:
+                    receive_packet.append(int.from_bytes(raw_data, "big"))
+                count = count + 1
+                if count > 1012:
+                    break
+            else:
+                try:
+                    temp = self.serial.read()
+                    if read_header:
+                        header.append(int.from_bytes(temp, "big"))
+                        header_count = header_count + 1
+                        if header_count == 20:
+                            read_start = True
+                    if temp == bytes([76]):
+                        read_header = True
+                        header.append(int.from_bytes(temp, "big"))
+                        header_count = header_count + 1
+                except serial.serialutil.SerialException as e:
+                    print(e)
+                    self.serial.close()
+                    return 1
+        self.serial.close()
+        return receive_packet
+
     def xgi_get_ethernet_data(self, memory, address, block):
         b = self.comm_connect()
         send_packet = self.xgi_ethernet_packet_maker(memory, address, block)
@@ -1060,25 +1114,38 @@ class WindowClass(QMainWindow, form_class):
             pass
 
         elif self.Comm_Product.currentIndex() == 1:
-            if (self.Comm_Product_C.currentIndex() == 0) | \
-                    (self.Comm_Product_C.currentIndex() == 1) | \
-                    (self.Comm_Product_C.currentIndex() == 4) | \
-                    (self.Comm_Product_C.currentIndex() == 5) | \
-                    (self.Comm_Product_C.currentIndex() == 6):
-                c = self.xec_search(start_memory, end_memory)
-                if c != 1:
-                    if self.ConnectionType == self.COM:
+            if self.ConnectionType == self.COM:
+                if (self.Comm_Product_C.currentIndex() == 0) | \
+                        (self.Comm_Product_C.currentIndex() == 1) | \
+                        (self.Comm_Product_C.currentIndex() == 4) | \
+                        (self.Comm_Product_C.currentIndex() == 5) | \
+                        (self.Comm_Product_C.currentIndex() == 6):
+                    c = self.xec_search(start_memory, end_memory)
+                    if c != 1:
                         try:
                             xgi_serial_data_read(self.main_data_load_start,
                                                  self.main_data_load_end,
                                                  self.main_data_load_memory)
                         except ValueError:
                             return 1
-                    elif self.ConnectionType == self.ETHERNET:
+            elif self.ConnectionType == self.ETHERNET:
+                if (self.Comm_Product_C.currentIndex() == 0) | \
+                        (self.Comm_Product_C.currentIndex() == 1) | \
+                        (self.Comm_Product_C.currentIndex() == 4):
+                    c = self.xec_search(start_memory, end_memory)
+                    if c != 1:
                         xgi_ethernet_data_read(self.main_data_load_start,
                                                self.main_data_load_end,
                                                self.main_data_load_memory)
-                    self.memory_tree_viewer()
+                elif (self.Comm_Product_C.currentIndex() == 5) | \
+                    (self.Comm_Product_C.currentIndex() == 6):
+                    c = self.xec_search(start_memory, end_memory)
+                    if c != 1:
+                        glofa_ethernet_data_read(self.main_data_load_start,
+                                                 self.main_data_load_end,
+                                                 self.main_data_load_memory)
+
+        self.memory_tree_viewer()
         self.comm_connect_memory_function()
 
     def xec_search(self, data1, data2):
@@ -1175,6 +1242,39 @@ class WindowClass(QMainWindow, form_class):
             for i in serial_ports_list:
                 ports.append(i.device)
             self.CommSel_Comport.addItems(ports)
+
+    @staticmethod
+    def glofa_ethernet_packet_maker(memory, address, block):
+        application_header = bytearray("LGIS-GLOFA", encoding='latin-1')
+        application_header.append(0x00)
+        application_header.append(0x00)
+        application_header.append(0x00)
+        application_header.append(0x33)
+        application_header.append(int(block))
+        application_header.append(0x00)
+        application_header.append(15 + len(str(address)))
+        application_header.append(0x00)
+        application_header.append(0x00)
+        application_header.append(7 + len(str(address)))
+        application_instruction = bytearray()
+        application_instruction.append(0x54)
+        application_instruction.append(0x00)
+        application_instruction.append(0x14)
+        application_instruction.append(0x00)
+        application_instruction.append(0x00)
+        application_instruction.append(0x00)
+        application_instruction.append(0x01)
+        application_instruction.append(0x00)
+        application_instruction.append(3 + len(str(address)))
+        application_instruction.append(0x00)
+        application_instruction.append(0x25)
+        application_instruction.append(bytearray(str(memory), encoding="latin-1")[0])
+        application_instruction.append(0x42)
+        application_instruction = application_instruction + bytearray(str(address), encoding="latin-1")
+        application_instruction.append(0xE8)
+        application_instruction.append(0x03)
+        send_data_packet = application_header + application_instruction
+        return send_data_packet
 
     @staticmethod
     def xgi_ethernet_packet_maker(memory, address, block):
