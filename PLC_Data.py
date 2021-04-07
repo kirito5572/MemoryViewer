@@ -49,3 +49,7 @@ GLOFA_GMR = [65536]
 
 MASTER_K = ["M"]
 
+ETOSPD = ["M"]
+ETOSRD = ["M"]
+ETOSXPD = ["M"]
+

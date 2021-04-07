@@ -83,7 +83,10 @@ class WindowClass(QMainWindow, form_class):
     appearanceDataSize = DataSize.BYTE
     appearanceDataType = DataType.INT
     ConnectionType = 0
-    ETOS = ["ETOS", "ETOS", "ETOS"]
+    ETOS = ["ETOS PD", "ETOS RD", "ETOS XPD"]
+    ETOS_PD = ["GLOFA MODE", "MODBUS"]
+    ETOS_RD = ["GLOFA MODE", "MODBUS"]
+    ETOS_XPD = ["GLOFA MODE", "MODBUS"]
 
     LSPLC = ["XGI", "XGR", "XGK", "XGB(XBC)", "XGB(XEC)", "MASTER-K", "GLOFA-GM", "XGS"]
     LSPLC_XGI = ["XGI-CPUUN", "XGI-CPUU", "XGI-CPUH", "XGI-CPUS", "XGI-CPUE"]
@@ -674,30 +677,32 @@ class WindowClass(QMainWindow, form_class):
             self.Comm_Product_C.addItems(self.LSPLC)
 
     def commsel_comm_product_c(self):
-        if self.Comm_Product_C.currentIndex() == 0:
+        if self.Comm_Product.currentIndex() == 0:
             self.Comm_Product_S_Name.clear()
-            self.Comm_Product_S_Name.addItems(self.LSPLC_XGI)
-        elif self.Comm_Product_C.currentIndex() == 1:
+            if self.Comm_Product_C.currentIndex() == 0:
+                self.Comm_Product_S_Name.addItems(self.ETOS_PD)
+            elif self.Comm_Product_C.currentIndex() == 1:
+                self.Comm_Product_S_Name.addItems(self.ETOS_RD)
+            elif self.Comm_Product_C.currentIndex() == 2:
+                self.Comm_Product_S_Name.addItems(self.ETOS_XPD)
+        elif self.Comm_Product.currentIndex() == 1:
             self.Comm_Product_S_Name.clear()
-            self.Comm_Product_S_Name.addItems(self.LSPLC_XGR)
-        elif self.Comm_Product_C.currentIndex() == 2:
-            self.Comm_Product_S_Name.clear()
-            self.Comm_Product_S_Name.addItems(self.LSPLC_XGK)
-        elif self.Comm_Product_C.currentIndex() == 3:
-            self.Comm_Product_S_Name.clear()
-            self.Comm_Product_S_Name.addItems(self.LSPLC_XBC)
-        elif self.Comm_Product_C.currentIndex() == 4:
-            self.Comm_Product_S_Name.clear()
-            self.Comm_Product_S_Name.addItems(self.LSPLC_XEC)
-        elif self.Comm_Product_C.currentIndex() == 5:
-            self.Comm_Product_S_Name.clear()
-            self.Comm_Product_S_Name.addItems(self.LSPLC_MASTERK)
-        elif self.Comm_Product_C.currentIndex() == 6:
-            self.Comm_Product_S_Name.clear()
-            self.Comm_Product_S_Name.addItems(self.LSPLC_GLOFA)
-        elif self.Comm_Product_C.currentIndex() == 7:
-            self.Comm_Product_S_Name.clear()
-            self.Comm_Product_S_Name.addItems(self.LSPLC_XGR)
+            if self.Comm_Product_C.currentIndex() == 0:
+                self.Comm_Product_S_Name.addItems(self.LSPLC_XGI)
+            elif self.Comm_Product_C.currentIndex() == 1:
+                self.Comm_Product_S_Name.addItems(self.LSPLC_XGR)
+            elif self.Comm_Product_C.currentIndex() == 2:
+                self.Comm_Product_S_Name.addItems(self.LSPLC_XGK)
+            elif self.Comm_Product_C.currentIndex() == 3:
+                self.Comm_Product_S_Name.addItems(self.LSPLC_XBC)
+            elif self.Comm_Product_C.currentIndex() == 4:
+                self.Comm_Product_S_Name.addItems(self.LSPLC_XEC)
+            elif self.Comm_Product_C.currentIndex() == 5:
+                self.Comm_Product_S_Name.addItems(self.LSPLC_MASTERK)
+            elif self.Comm_Product_C.currentIndex() == 6:
+                self.Comm_Product_S_Name.addItems(self.LSPLC_GLOFA)
+            elif self.Comm_Product_C.currentIndex() == 7:
+                self.Comm_Product_S_Name.addItems(self.LSPLC_XGR)
 
     def commsel_comm_type_function(self):
         if self.CommSel_COM.isChecked():
@@ -869,7 +874,27 @@ class WindowClass(QMainWindow, form_class):
 
     def comm_connect_memory_function(self):
         if self.Comm_Product.currentIndex() == 0:
-            pass
+            if self.Comm_Product_C.currentIndex() == 0:
+                self.memoryTree.clear()
+                top = QTreeWidgetItem(self.memoryTree)
+                top.setText(0, self.Comm_Product_S_Name.currentText())
+                a = [QTreeWidgetItem(top) for _ in range(len(PLC_Data.ETOSPD))]
+                for i in range(len(PLC_Data.ETOSPD)):
+                    a[i].setText(0, PLC_Data.ETOSPD[i])
+            elif self.Comm_Product_C.currentIndex() == 1:
+                self.memoryTree.clear()
+                top = QTreeWidgetItem(self.memoryTree)
+                top.setText(0, self.Comm_Product_S_Name.currentText())
+                a = [QTreeWidgetItem(top) for _ in range(len(PLC_Data.ETOSRD))]
+                for i in range(len(PLC_Data.ETOSRD)):
+                    a[i].setText(0, PLC_Data.ETOSRD[i])
+            elif self.Comm_Product_C.currentIndex() == 2:
+                self.memoryTree.clear()
+                top = QTreeWidgetItem(self.memoryTree)
+                top.setText(0, self.Comm_Product_S_Name.currentText())
+                a = [QTreeWidgetItem(top) for _ in range(len(PLC_Data.ETOSXPD))]
+                for i in range(len(PLC_Data.ETOSXPD)):
+                    a[i].setText(0, PLC_Data.ETOSXPD[i])
         elif self.Comm_Product.currentIndex() == 1:
             if self.Comm_Product_C.currentIndex() == 0:
                 """XGI"""
@@ -1111,7 +1136,31 @@ class WindowClass(QMainWindow, form_class):
         start_memory = str(self.search_start_memory.text())
         end_memory = str(self.search_end_memory.text())
         if self.Comm_Product.currentIndex() == 0:
-            pass
+            if self.ConnectionType == self.COM:
+                if (self.Comm_Product_C.currentIndex() == 0) | \
+                        (self.Comm_Product_C.currentIndex() == 1) | \
+                        (self.Comm_Product_C.currentIndex() == 2):
+                    if (self.Comm_Product)
+                    c = self.xec_search(start_memory, end_memory)
+                    if c != 1:
+                        try:
+                            xgi_serial_data_read(self.main_data_load_start,
+                                                 self.main_data_load_end,
+                                                 self.main_data_load_memory)
+                        except ValueError:
+                            return 1
+            elif self.ConnectionType == self.ETHERNET:
+                if (self.Comm_Product_C.currentIndex() == 0) | \
+                        (self.Comm_Product_C.currentIndex() == 1) | \
+                        (self.Comm_Product_C.currentIndex() == 2):
+                    c = self.xec_search(start_memory, end_memory)
+                    if c != 1:
+                        try:
+                            glofa_ethernet_data_read(self.main_data_load_start,
+                                                     self.main_data_load_end,
+                                                     self.main_data_load_memory)
+                        except ValueError:
+                            return 1
 
         elif self.Comm_Product.currentIndex() == 1:
             if self.ConnectionType == self.COM:
