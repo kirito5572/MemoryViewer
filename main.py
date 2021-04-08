@@ -18,6 +18,248 @@ from bitarray import bitarray
 form_class = uic.loadUiType("main.ui")[0]
 
 
+def memory_end_detector(end, memory):
+    if mainWindow.Comm_Product.currentIndex() == 0:
+        pass
+    elif mainWindow.Comm_Product.currentIndex() == 1:
+        memory_sel = 0
+        if mainWindow.Comm_Product_C.currentIndex() == 0:
+            for i in range(len(PLC_Data.XGI)):
+                if PLC_Data.XGI[i] == memory:
+                    memory_sel = i
+                    break
+            if mainWindow.Comm_Product_S_Name.currentIndex() == 0:
+                data = PLC_Data.XGI_CPUUN[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 1:
+                data = PLC_Data.XGI_CPUU[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 2:
+                data = PLC_Data.XGI_CPUH[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 3:
+                data = PLC_Data.XGI_CPUS[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 4:
+                data = PLC_Data.XGI_CPUE[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+        elif mainWindow.Comm_Product_C.currentIndex() == 1:
+            for i in range(len(PLC_Data.XGI)):
+                if PLC_Data.XGI[i] == memory:
+                    memory_sel = i
+                    break
+            data = PLC_Data.XGR_CPUH[memory_sel]
+            if end > data:
+                return [data // 1000, data % 1000]
+        elif mainWindow.Comm_Product_C.currentIndex() == 2:
+            for i in range(len(PLC_Data.XGK)):
+                if PLC_Data.XGK[i] == memory:
+                    memory_sel = i
+                    break
+            if mainWindow.Comm_Product_S_Name.currentIndex() == 0:
+                data = PLC_Data.XGK_CPUUN[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 1:
+                data = PLC_Data.XGK_CPUHN[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 2:
+                data = PLC_Data.XGK_CPUSN[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 3:
+                data = PLC_Data.XGK_CPUU[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 4:
+                data = PLC_Data.XGK_CPUH[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 5:
+                data = PLC_Data.XGK_CPUA[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 6:
+                data = PLC_Data.XGK_CPUS[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 7:
+                data = PLC_Data.XGK_CPUE[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+        elif mainWindow.Comm_Product_C.currentIndex() == 3:
+            if mainWindow.Comm_Product_S_Name.currentIndex() == 0:
+                for i in range(len(PLC_Data.XGK)):
+                    if PLC_Data.XGK[i] == memory:
+                        memory_sel = i
+                        break
+                data = PLC_Data.XBC_TYPE_U[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 1:
+                for i in range(len(PLC_Data.XGK)):
+                    if PLC_Data.XGK[i] == memory:
+                        memory_sel = i
+                        break
+                data = PLC_Data.XBC_TYPE_H[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 2:
+                for i in range(len(PLC_Data.XBC_SU)):
+                    if PLC_Data.XBC_SU[i] == memory:
+                        memory_sel = i
+                        break
+                data = PLC_Data.XBC_TYPE_SU[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 3:
+                for i in range(len(PLC_Data.XBC_E)):
+                    if PLC_Data.XBC_E[i] == memory:
+                        memory_sel = i
+                        break
+                data = PLC_Data.XBC_TYPE_E[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 4:
+                for i in range(len(PLC_Data.XBC_S)):
+                    if PLC_Data.XBC_S[i] == memory:
+                        memory_sel = i
+                        break
+                data = PLC_Data.XBM_SILM[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+        elif mainWindow.Comm_Product_C.currentIndex() == 4:
+            if mainWindow.Comm_Product_S_Name.currentIndex() == 0:
+                for i in range(len(PLC_Data.XGI)):
+                    if PLC_Data.XGI[i] == memory:
+                        memory_sel = i
+                        break
+                data = PLC_Data.XEC_TYPE_U[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 1:
+                for i in range(len(PLC_Data.XGI)):
+                    if PLC_Data.XGI[i] == memory:
+                        memory_sel = i
+                        break
+                data = PLC_Data.XEC_TYPE_H[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 2:
+                for i in range(len(PLC_Data.XEC)):
+                    if PLC_Data.XEC[i] == memory:
+                        memory_sel = i
+                        break
+                data = PLC_Data.XEC_TYPE_SU[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 3:
+                for i in range(len(PLC_Data.XEC)):
+                    if PLC_Data.XEC[i] == memory:
+                        memory_sel = i
+                        break
+                data = PLC_Data.XEC_TYPE_E[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+        elif mainWindow.Comm_Product_C.currentIndex() == 5:
+            for i in range(len(PLC_Data.MASTER_K)):
+                if PLC_Data.MASTER_K[i] == memory:
+                    memory_sel = i
+                    break
+            if mainWindow.Comm_Product_S_Name.currentIndex() == 0:
+                data = PLC_Data.MASTER_K120S[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 1:
+                data = PLC_Data.MASTER_K200S[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 2:
+                data = PLC_Data.MASTER_K300S[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 3:
+                data = PLC_Data.MASTER_K10S1[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 4:
+                data = PLC_Data.MASTER_K80S[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 5:
+                data = PLC_Data.MASTER_K1000S[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 6:
+                data = PLC_Data.MASTER_K10S[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 7:
+                data = PLC_Data.MASTER_K30S[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 8:
+                data = PLC_Data.MASTER_K60S[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+        elif mainWindow.Comm_Product_C.currentIndex() == 6:
+            for i in range(len(PLC_Data.GLOFA)):
+                if PLC_Data.GLOFA[i] == memory:
+                    memory_sel = i
+                    break
+            if mainWindow.Comm_Product_S_Name.currentIndex() == 0:
+                data = PLC_Data.GLOFA_GM1[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 1:
+                data = PLC_Data.GLOFA_GM2[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 2:
+                data = PLC_Data.GLOFA_GM3[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 3:
+                data = PLC_Data.GLOFA_GM4[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 4:
+                data = PLC_Data.GLOFA_GM4B[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 5:
+                data = PLC_Data.GLOFA_GM4C[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 6:
+                data = PLC_Data.GLOFA_GM6[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 7:
+                data = PLC_Data.GLOFA_GM7U[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+            elif mainWindow.Comm_Product_S_Name.currentIndex() == 8:
+                data = PLC_Data.GLOFA_GMR[memory_sel]
+                if end > data:
+                    return [data // 1000, data % 1000]
+        elif mainWindow.Comm_Product_C.currentIndex() == 7:
+            for i in range(len(PLC_Data.XGS)):
+                if PLC_Data.XGS[i] == memory:
+                    memory_sel = i
+                    break
+            data = PLC_Data.XGS_01[memory_sel]
+            if end > data:
+                return [data // 1000, data % 1000]
+    return [0, 0]
+
+
 def glofa_ethernet_data_read(start, end, memory):
     range_data = ((end // 1000) + 1) - (start // 1000)
     for a in range(range_data):
@@ -84,9 +326,9 @@ class WindowClass(QMainWindow, form_class):
     appearanceDataType = DataType.INT
     ConnectionType = 0
     ETOS = ["ETOS PD", "ETOS RD", "ETOS XPD"]
-    ETOS_PD = ["GLOFA MODE", "MODBUS"]
-    ETOS_RD = ["GLOFA MODE", "MODBUS"]
-    ETOS_XPD = ["GLOFA MODE", "MODBUS"]
+    ETOS_PD = ["GLOFA MODE"]
+    ETOS_RD = ["GLOFA MODE"]
+    ETOS_XPD = ["GLOFA MODE"]
 
     LSPLC = ["XGI", "XGR", "XGK", "XGB(XBC)", "XGB(XEC)", "MASTER-K", "GLOFA-GM", "XGS"]
     LSPLC_XGI = ["XGI-CPUUN", "XGI-CPUU", "XGI-CPUH", "XGI-CPUS", "XGI-CPUE"]
@@ -96,6 +338,7 @@ class WindowClass(QMainWindow, form_class):
     LSPLC_XEC = ["XEC U TYPE", "XEC H TYPE", "XEC SU TYPE", "XEC E TYPE"]
     LSPLC_MASTERK = ["K120S", "K200S", "K300S", "K10S1", "K80S", "K1000S", "K10S", "K30S", "K60S"]
     LSPLC_GLOFA = ["GM1", "GM2", "GM3", "GM4-CPUA", "GM4-CPUB", "GM4-CPUC", "GM6", "GM7U", "GMR"]
+    LSPLC_XGS = ["CPU01A"]
     serial = serial.Serial
     socket = socket.socket
 
@@ -108,6 +351,7 @@ class WindowClass(QMainWindow, form_class):
         self.dataTable.setFont(self.font)
         self.port_refresh()
         self.Comm_Product_C.addItems(self.ETOS)
+        self.Comm_Product_S_Name.addItems(self.ETOS_PD)
         self.DataSel_Float.setEnabled(False)
         self.button_menu_refresh_function()
         self.button_menu_refresh_function_2()
@@ -291,14 +535,14 @@ class WindowClass(QMainWindow, form_class):
                             data[i][j] = self.main_data[i * 2][j * 2] + (self.main_data[i * 2][j * 2 + 1] * 256)
                         except Exception as e:
                             print(e)
-                            data[i][j] = None
+                            data[i][j] = 0
                     else:
                         try:
                             data[i][j] = self.main_data[(i * 2) + 1][(j % 5) * 2] \
                                          + (self.main_data[(i * 2) + 1][(j % 5) * 2 + 1] * 256)
                         except Exception as e:
                             print(e)
-                            data[i][j] = None
+                            data[i][j] = 0
 
             if self.appearanceDataType == DataType.BINARY:
                 data = data.astype('uint16')
@@ -395,14 +639,14 @@ class WindowClass(QMainWindow, form_class):
                             temp_data[i][j] = self.main_data[i * 2][j * 2] + (self.main_data[i * 2][j * 2 + 1] * 256)
                         except Exception as e:
                             print(e)
-                            temp_data[i][j] = None
+                            temp_data[i][j] = 0
                     else:
                         try:
                             temp_data[i][j] = self.main_data[(i * 2) + 1][(j % 5) * 2] \
                                          + (self.main_data[(i * 2) + 1][(j % 5) * 2 + 1] * 256)
                         except Exception as e:
                             print(e)
-                            temp_data[i][j] = None
+                            temp_data[i][j] = 0
             for i in range(a):
                 for j in range(10):
                     if j < 5:
@@ -410,14 +654,14 @@ class WindowClass(QMainWindow, form_class):
                             data[i][j] = temp_data[i * 2][j * 2] + (temp_data[i * 2][j * 2 + 1] * 65536)
                         except Exception as e:
                             print(e)
-                            data[i][j] = None
+                            data[i][j] = 0
                     else:
                         try:
                             data[i][j] = temp_data[(i * 2) + 1][(j % 5) * 2] \
                                          + (temp_data[(i * 2) + 1][(j % 5) * 2 + 1] * 65536)
                         except Exception as e:
                             print(e)
-                            data[i][j] = None
+                            data[i][j] = 0
             if self.appearanceDataType == DataType.BINARY:
                 data = data.astype('uint32')
                 for i in range(a):
@@ -529,14 +773,14 @@ class WindowClass(QMainWindow, form_class):
                             temp_data[i][j] = self.main_data[i * 2][j * 2] + (self.main_data[i * 2][j * 2 + 1] * 256)
                         except Exception as e:
                             print(e)
-                            temp_data[i][j] = None
+                            temp_data[i][j] = 0
                     else:
                         try:
                             temp_data[i][j] = self.main_data[(i * 2) + 1][(j % 5) * 2] \
                                               + (self.main_data[(i * 2) + 1][(j % 5) * 2 + 1] * 256)
                         except Exception as e:
                             print(e)
-                            temp_data[i][j] = None
+                            temp_data[i][j] = 0
             for i in range(temp_b):
                 for j in range(10):
                     if j < 5:
@@ -544,14 +788,14 @@ class WindowClass(QMainWindow, form_class):
                             temp_data2[i][j] = temp_data[i * 2][j * 2] + (temp_data[i * 2][j * 2 + 1] * 65536)
                         except Exception as e:
                             print(e)
-                            temp_data2[i][j] = None
+                            temp_data2[i][j] = 0
                     else:
                         try:
                             temp_data2[i][j] = temp_data[(i * 2) + 1][(j % 5) * 2] \
                                          + (temp_data[(i * 2) + 1][(j % 5) * 2 + 1] * 65536)
                         except Exception as e:
                             print(e)
-                            temp_data2[i][j] = None
+                            temp_data2[i][j] = 0
             for i in range(a):
                 for j in range(10):
                     if j < 5:
@@ -702,7 +946,7 @@ class WindowClass(QMainWindow, form_class):
             elif self.Comm_Product_C.currentIndex() == 6:
                 self.Comm_Product_S_Name.addItems(self.LSPLC_GLOFA)
             elif self.Comm_Product_C.currentIndex() == 7:
-                self.Comm_Product_S_Name.addItems(self.LSPLC_XGR)
+                self.Comm_Product_S_Name.addItems(self.LSPLC_XGS)
 
     def commsel_comm_type_function(self):
         if self.CommSel_COM.isChecked():
@@ -1140,28 +1384,32 @@ class WindowClass(QMainWindow, form_class):
                 if (self.Comm_Product_C.currentIndex() == 0) | \
                         (self.Comm_Product_C.currentIndex() == 1) | \
                         (self.Comm_Product_C.currentIndex() == 2):
-                    if (self.Comm_Product)
-                    c = self.xec_search(start_memory, end_memory)
-                    if c != 1:
-                        try:
-                            xgi_serial_data_read(self.main_data_load_start,
-                                                 self.main_data_load_end,
-                                                 self.main_data_load_memory)
-                        except ValueError:
-                            return 1
+                    if self.Comm_Product_S_Name.currentIndex() == 0:
+                        c = self.xec_search(start_memory, end_memory)
+                        if c != 1:
+                            try:
+                                xgi_serial_data_read(self.main_data_load_start,
+                                                     self.main_data_load_end,
+                                                     self.main_data_load_memory)
+                            except ValueError:
+                                return 1
+                    elif self.Comm_Product_S_Name.currentIndex() == 1:
+                        pass
             elif self.ConnectionType == self.ETHERNET:
                 if (self.Comm_Product_C.currentIndex() == 0) | \
                         (self.Comm_Product_C.currentIndex() == 1) | \
                         (self.Comm_Product_C.currentIndex() == 2):
-                    c = self.xec_search(start_memory, end_memory)
-                    if c != 1:
-                        try:
-                            glofa_ethernet_data_read(self.main_data_load_start,
-                                                     self.main_data_load_end,
-                                                     self.main_data_load_memory)
-                        except ValueError:
-                            return 1
-
+                    if self.Comm_Product_S_Name.currentIndex() == 0:
+                        c = self.xec_search(start_memory, end_memory)
+                        if c != 1:
+                            try:
+                                glofa_ethernet_data_read(self.main_data_load_start,
+                                                         self.main_data_load_end,
+                                                         self.main_data_load_memory)
+                            except ValueError:
+                                return 1
+                    elif self.Comm_Product_S_Name.currentIndex() == 1:
+                        pass
         elif self.Comm_Product.currentIndex() == 1:
             if self.ConnectionType == self.COM:
                 if (self.Comm_Product_C.currentIndex() == 0) | \
